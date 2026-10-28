@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบตรวจสอบสถานะแผ่นป้ายทะเบียนรถ กรณีชำรุด/สูญหาย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#b8892b;--bg:#f1edf7;--card:#fff;--ink:#2a1a4a;--mute:#6a5c82;--line:#d9d0e6;--ok:#5c4300;--okbg:#FFF200;--wait:#7d5300;--waitbg:#fbefd2;--none:#a12a22;--nonebg:#fde6e4;--btn:#5b3a8e;--btnt:#fff;--plate:#fff;--plateink:#111;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--gold:#e2b857;--bg:#191026;--card:#241837;--ink:#f1ebfa;--mute:#b3a4cc;--line:#3b2c57;--ok:#ffe27a;--okbg:#4a3f10;--wait:#f2c46a;--waitbg:#3a2c10;--none:#ffb3ab;--nonebg:#46222a;--btn:#e2b857;--btnt:#2a1a4a}}
+:root[data-theme="dark"]{color-scheme:dark;--gold:#e2b857;--bg:#191026;--card:#241837;--ink:#f1ebfa;--mute:#b3a4cc;--line:#3b2c57;--ok:#ffe27a;--okbg:#4a3f10;--wait:#f2c46a;--waitbg:#3a2c10;--none:#ffb3ab;--nonebg:#46222a;--btn:#e2b857;--btnt:#2a1a4a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Sarabun,"Noto Sans Thai",sans-serif}
+main{max-width:30rem;margin:0 auto;padding:1.5rem 1rem 3rem}
+h1{font:600 1.5rem/1.3 Prompt,sans-serif;margin:.5rem 0 .25rem}
+.sub{color:var(--mute);margin:0 0 1.25rem}
+form{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:12px;padding:1rem;display:grid;gap:.75rem}
+label{display:grid;gap:.25rem;font-weight:600;font-size:.95rem}
+input,select{font:inherit;padding:.65rem .75rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #3b82f6;outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+button{font:600 1rem Sarabun,sans-serif;padding:.75rem;border:0;border-radius:8px;background:var(--btn);color:var(--btnt);cursor:pointer}
+#out{margin-top:1.25rem}
+.plate{background:var(--plate);color:var(--plateink);border:3px solid #111;border-radius:10px;padding:.6rem 1rem;text-align:center;width:fit-content;margin:0 auto 1rem;min-width:15rem}
+.plate b{display:block;font:600 2.4rem/1.2 Prompt,sans-serif;letter-spacing:.04em;font-variant-numeric:lining-nums}
+.plate b i{font-style:normal;font-size:1.2em}.red{color:#b3261e;font-weight:600}.res .contact{font-size:.9rem;color:var(--btn)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .red{color:#ff9b93}}:root[data-theme="dark"] .red{color:#ff9b93}.plate span{font-size:1rem}
+.res{border-radius:12px;padding:1rem 1.1rem}
+.res h2{font:600 1.25rem/1.3 Prompt,sans-serif;margin:0 0 .5rem}
+.ok{background:var(--okbg);color:var(--ok)}.wait{background:var(--waitbg);color:var(--wait)}.none{background:var(--nonebg);color:var(--none)}
+.res p,.res li{color:var(--ink)}
+.res ul{padding-left:1.2rem;margin:.25rem 0}
+dl{display:grid;grid-template-columns:auto 1fr;gap:.2rem 1rem;margin:.5rem 0;color:var(--ink)}
+dt{color:var(--mute)}dd{margin:0}
+footer{margin-top:1.5rem;font-size:.85rem;color:var(--mute)}
+</style>
+</head>
+<body>
+<main>
+<h1>ระบบตรวจสอบสถานะแผ่นป้ายทะเบียนรถ<br>กรณีชำรุด/สูญหาย</h1>
+<p class="sub">โดย สำนักงานขนส่งจังหวัดชัยภูมิ</p>
+<form id="f">
+<div class="row">
+<label>หมวดอักษร<input id="g" placeholder="เช่น กข หรือ 1กก" autocomplete="off" required></label>
+<label>หมายเลขทะเบียน<input id="n" inputmode="numeric" placeholder="เช่น 1234" autocomplete="off" required></label>
+</div>
+<label>จังหวัด<select id="p" required></select></label>
+<button type="submit">ตรวจสอบสถานะ</button>
+</form>
+<div id="out" aria-live="polite"></div>
+</main>
+<script>
+// วาง URL ของ Web app จาก Google Apps Script ที่นี่ (ลงท้ายด้วย /exec)
+var API_URL = "https://script.google.com/macros/s/AKfycbzpQSRGaSkkKb9IkXzczsRmaDYyWWMAuoiXgYTVADRohYzyivr6bgIVoU_ADdcIcaH_/exec";
+
+var norm = function(s){return s.replace(/\s+/g,"").trim()};
+var out = document.getElementById("out"), btn = document.querySelector("#f button");
+
+var CONTACT = '<br>ฝ่ายทะเบียนรถ สำนักงานขนส่งจังหวัดชัยภูมิ<br>0 4481 1343 ต่อ 12</p>';
+
+function find(g,n,p){
+  var q = "?g=" + encodeURIComponent(g) + "&n=" + encodeURIComponent(n) + "&p=" + encodeURIComponent(p);
+  return fetch(API_URL + q).then(function(res){if(!res.ok)throw 0;return res.json()}).then(function(d){if(!d||!d.ok)throw 0;return d});
+}
+
+document.getElementById("f").addEventListener("submit",function(e){
+  e.preventDefault();
+  var g = norm(g_.value), n = norm(n_.value.replace(/\D/g,"")), p = norm(p_.value);
+  var plate = '<div class="plate"><b>' + esc(g).replace(/[ก-ฮ]+/g,'<i>$&</i>') + ' ' + esc(n) + '</b><span>' + esc(p) + '</span></div>';
+  btn.disabled = true; btn.textContent = "กำลังตรวจสอบ...";
+  find(g,n,p).then(function(r){
+    var h;
+    if(!r.found){
+      h = '<div class="res none"><h2>ยังไม่พบข้อมูลแผ่นป้ายทะเบียนรถนี้</h2><p>โปรดตรวจสอบหมวดอักษร หมายเลขทะเบียน และจังหวัดอีกครั้ง</p><p>หากข้อมูลถูกต้องแล้ว อาจเป็นเพราะแผ่นป้ายทะเบียนรถยังมาไม่ถึง หรือยังไม่ได้ยื่นคำขอกรณีชำรุด/สูญหาย ขอให้ตรวจสอบอีกครั้งในภายหลัง</p><p class="contact">สอบถามเพิ่มเติมได้ที่' + CONTACT + '</div>';
+    } else {
+      h = '<div class="res ok"><h2>แผ่นป้ายทะเบียนรถมาแล้ว</h2>' + (r.plates ? '<dl><dt>จำนวนป้าย</dt><dd>' + r.plates + ' แผ่น</dd></dl>' : '') + '<p>ติดต่อรับแผ่นป้ายทะเบียนรถได้ที่<br>ฝ่ายทะเบียนรถ อาคาร 1 ชั้น 1<br>ในวันและเวลาราชการ</p><p>โปรดนำ<u>ใบเสร็จรับเงินหรือภาพถ่ายใบเสร็จรับเงิน</u>มาแสดงต่อเจ้าหน้าที่</p><p><b>หมายเหตุ:</b> กรณีแผ่นป้ายทะเบียนรถ<span class="red">ชำรุด</span> โปรดนำแผ่นป้ายทะเบียนรถเดิมมาส่งคืนแก่เจ้าหน้าที่</p><p class="contact">หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ' + CONTACT + '</div>';
+    }
+    out.innerHTML = plate + h;
+  }).catch(function(){
+    out.innerHTML = plate + '<div class="res none"><h2>ระบบขัดข้อง</h2><p>ไม่สามารถตรวจสอบข้อมูลได้ในขณะนี้ โปรดลองใหม่อีกครั้งภายหลัง</p><p class="contact">สอบถามได้ที่' + CONTACT + '</div>';
+  }).then(function(){btn.disabled = false; btn.textContent = "ตรวจสอบสถานะ"});
+});
+
+var g_ = document.getElementById("g"), n_ = document.getElementById("n"), p_ = document.getElementById("p");
+var PV = "กระบี่ กรุงเทพมหานคร กาญจนบุรี กาฬสินธุ์ กำแพงเพชร ขอนแก่น จันทบุรี ฉะเชิงเทรา ชลบุรี ชัยนาท ชัยภูมิ ชุมพร เชียงราย เชียงใหม่ ตรัง ตราด ตาก นครนายก นครปฐม นครพนม นครราชสีมา นครศรีธรรมราช นครสวรรค์ นนทบุรี นราธิวาส น่าน บึงกาฬ บุรีรัมย์ ปทุมธานี ประจวบคีรีขันธ์ ปราจีนบุรี ปัตตานี พระนครศรีอยุธยา พะเยา พังงา พัทลุง พิจิตร พิษณุโลก เพชรบุรี เพชรบูรณ์ แพร่ ภูเก็ต มหาสารคาม มุกดาหาร แม่ฮ่องสอน ยโสธร ยะลา ร้อยเอ็ด ระนอง ระยอง ราชบุรี ลพบุรี ลำปาง ลำพูน เลย ศรีสะเกษ สกลนคร สงขลา สตูล สมุทรปราการ สมุทรสงคราม สมุทรสาคร สระแก้ว สระบุรี สิงห์บุรี สุโขทัย สุพรรณบุรี สุราษฎร์ธานี สุรินทร์ หนองคาย หนองบัวลำภู อ่างทอง อำนาจเจริญ อุดรธานี อุตรดิตถ์ อุทัยธานี อุบลราชธานี".split(" ");
+PV.forEach(function(v){var o = document.createElement("option"); o.value = o.textContent = v; p_.appendChild(o)});
+p_.value = "ชัยภูมิ";
+
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+</script>
+</body>
+</html>
